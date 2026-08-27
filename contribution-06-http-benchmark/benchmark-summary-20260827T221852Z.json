@@ -1,0 +1,48 @@
+{
+  "run_id": "20260827T221852Z",
+  "room": "technocore",
+  "read_sequential": {
+    "samples": 100,
+    "status_breakdown": {
+      "200": 100
+    },
+    "latency_ms": {
+      "p50": 581.22,
+      "p90": 617.36,
+      "p99": 835.63,
+      "mean": 588.04,
+      "min": 532.29,
+      "max": 835.63
+    }
+  },
+  "read_concurrent": {
+    "samples": 50,
+    "workers": 20,
+    "status_breakdown": {
+      "200": 50
+    },
+    "latency_ms": {
+      "p50": 595.0,
+      "p90": 631.97,
+      "p99": 1602.81,
+      "mean": 613.01,
+      "min": 540.61,
+      "max": 1602.81
+    }
+  },
+  "write_sequential": {
+    "samples": 20,
+    "status_breakdown": {
+      "200": 20
+    },
+    "ambiguous_200_count": 0,
+    "latency_ms": {
+      "p50": 602.43,
+      "p90": 647.0,
+      "p99": 901.35,
+      "mean": 612.16,
+      "min": 554.12,
+      "max": 901.35
+    }
+  }
+}

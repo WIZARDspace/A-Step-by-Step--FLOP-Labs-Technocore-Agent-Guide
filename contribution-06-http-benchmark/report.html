@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Technocore Reliability Benchmark</title>
+<style>
+  :root {
+    --bg: #0d1117; --panel: #161b22; --border: #30363d;
+    --text: #e6edf3; --muted: #8b949e; --accent: #58a6ff; --accent2: #3fb950; --warn: #f0883e;
+  }
+  * { box-sizing: border-box; }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 0; padding: 40px 20px; }
+  .wrap { max-width: 1000px; margin: 0 auto; }
+  h1 { font-size: 1.5rem; margin-bottom: 4px; }
+  .subtitle { color: var(--muted); margin-bottom: 24px; font-size: 0.9rem; }
+  .upload-row { margin-bottom: 24px; }
+  input[type="file"] { color: var(--text); font-size: 0.85rem; }
+  .phases { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-bottom: 28px; }
+  .phase { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 18px; }
+  .phase h3 { margin: 0 0 12px 0; font-size: 0.95rem; color: var(--accent); }
+  .metric-row { display: flex; justify-content: space-between; padding: 4px 0; font-size: 0.85rem; border-bottom: 1px solid #21262d; }
+  .metric-row:last-child { border-bottom: none; }
+  .metric-label { color: var(--muted); }
+  .metric-val { font-variant-numeric: tabular-nums; }
+  .bar-chart { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 20px; }
+  .bar-chart h3 { margin: 0 0 16px 0; font-size: 0.95rem; }
+  .bar-row { display: grid; grid-template-columns: 90px 1fr 60px; align-items: center; gap: 10px; margin-bottom: 8px; font-size: 0.8rem; }
+  .bar-label { color: var(--muted); }
+  .bar-track { background: #21262d; border-radius: 4px; height: 18px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 4px; }
+  .empty { color: var(--muted); text-align: center; padding: 40px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Technocore Reliability Benchmark</h1>
+  <div class="subtitle">Read/write latency and success-rate measurements against the live API.</div>
+  <div class="upload-row">
+    <label style="font-size:0.85rem;color:var(--muted);display:block;margin-bottom:6px;">Load summary JSON:</label>
+    <input type="file" id="fileInput" accept=".json">
+  </div>
+  <div class="phases" id="phases"><div class="empty">Load your benchmark-summary-*.json file above.</div></div>
+  <div class="bar-chart" id="barChart" style="display:none;">
+    <h3>p50 / p90 / p99 latency comparison (ms)</h3>
+    <div id="bars"></div>
+  </div>
+</div>
+<script>
+function phaseCard(title, data) {
+  if (!data) return '';
+  const lat = data.latency_ms || {};
+  const statusStr = Object.entries(data.status_breakdown || {}).map(([k,v]) => `${k}: ${v}`).join(', ');
+  return `
+    <div class="phase">
+      <h3>${title}</h3>
+      <div class="metric-row"><span class="metric-label">Samples</span><span class="metric-val">${data.samples ?? '-'}</span></div>
+      <div class="metric-row"><span class="metric-label">Status breakdown</span><span class="metric-val">${statusStr}</span></div>
+      <div class="metric-row"><span class="metric-label">p50</span><span class="metric-val">${lat.p50 ?? '-'} ms</span></div>
+      <div class="metric-row"><span class="metric-label">p90</span><span class="metric-val">${lat.p90 ?? '-'} ms</span></div>
+      <div class="metric-row"><span class="metric-label">p99</span><span class="metric-val">${lat.p99 ?? '-'} ms</span></div>
+      <div class="metric-row"><span class="metric-label">mean</span><span class="metric-val">${lat.mean ?? '-'} ms</span></div>
+      <div class="metric-row"><span class="metric-label">min / max</span><span class="metric-val">${lat.min ?? '-'} / ${lat.max ?? '-'} ms</span></div>
+      ${data.ambiguous_200_count !== undefined ? `<div class="metric-row"><span class="metric-label">Ambiguous 200s</span><span class="metric-val">${data.ambiguous_200_count}</span></div>` : ''}
+    </div>
+  `;
+}
+
+function render(data) {
+  const phases = document.getElementById('phases');
+  phases.innerHTML =
+    phaseCard('Sequential Reads', data.read_sequential) +
+    phaseCard('Concurrent Reads', data.read_concurrent) +
+    phaseCard('Sequential Writes', data.write_sequential);
+
+  const entries = [
+    ['Read (seq) p50', data.read_sequential?.latency_ms?.p50, '#58a6ff'],
+    ['Read (seq) p99', data.read_sequential?.latency_ms?.p99, '#58a6ff'],
+    ['Read (conc) p50', data.read_concurrent?.latency_ms?.p50, '#3fb950'],
+    ['Read (conc) p99', data.read_concurrent?.latency_ms?.p99, '#3fb950'],
+    ['Write p50', data.write_sequential?.latency_ms?.p50, '#f0883e'],
+    ['Write p99', data.write_sequential?.latency_ms?.p99, '#f0883e'],
+  ].filter(e => e[1] != null);
+
+  const maxVal = Math.max(...entries.map(e => e[1]));
+  const bars = document.getElementById('bars');
+  bars.innerHTML = entries.map(([label, val, color]) => `
+    <div class="bar-row">
+      <div class="bar-label">${label}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${(val/maxVal*100).toFixed(1)}%;background:${color};"></div></div>
+      <div>${val} ms</div>
+    </div>
+  `).join('');
+  document.getElementById('barChart').style.display = 'block';
+}
+
+document.getElementById('fileInput').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (evt) => render(JSON.parse(evt.target.result));
+  reader.readAsText(file);
+});
+</script>
+</body>
+</html>

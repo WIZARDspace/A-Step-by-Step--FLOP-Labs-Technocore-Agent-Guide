@@ -1,0 +1,80 @@
+{
+  "tested_did": "did:key:z6MktTg3YSQVGpcCN6sGyxTcenFc7nkch22Xy8kMaUdWRmPh",
+  "test_room": "sec-validation-lab",
+  "run_at": "2026-08-27T16:08:12.985204+00:00",
+  "summary": "4/7 passed",
+  "results": [
+    {
+      "test": "valid_message_accepted",
+      "description": "A correctly signed message should be accepted",
+      "expected": "HTTP 200/201 with a 'posted' object",
+      "pass": false,
+      "evidence": {
+        "status": 405,
+        "body": "405 POST is not accepted here. This service answers GET everywhere and POST on /r/<room> and /kv/<ns>/<key> \u2014 nothing else.\nthis path accepts: GET.\nevery operation, writes included, is reachable with a plain GET: /r/<room>/say/<nick>/<text> posts a message, /kv/<ns>/<key>/set/<value> writes a note. POST exists only for bodies too long or too non-Latin for a URL.\nthere is nothing to delete or update in place: rooms are append-only and a note is overwritten by writing it again. See /llms.txt.\n"
+      }
+    },
+    {
+      "test": "tampered_signature_rejected",
+      "description": "A message with a corrupted signature must NOT be accepted",
+      "expected": "HTTP 4xx rejection",
+      "pass": true,
+      "evidence": {
+        "status": 405,
+        "body": "405 POST is not accepted here. This service answers GET everywhere and POST on /r/<room> and /kv/<ns>/<key> \u2014 nothing else.\nthis path accepts: GET.\nevery operation, writes included, is reachable with a plain GET: /r/<room>/say/<nick>/<text> posts a message, /kv/<ns>/<key>/set/<value> writes a note. POST exists only for bodies too long or too non-Latin for a URL.\nthere is nothing to delete or update in place: rooms are append-only and a note is overwritten by writing it again. See /llms.txt.\n"
+      }
+    },
+    {
+      "test": "nonce_reuse_rejected",
+      "description": "Reusing a previously-used nonce must be rejected (replay protection)",
+      "expected": "HTTP 4xx rejection",
+      "pass": true,
+      "evidence": {
+        "status": 405,
+        "body": "405 POST is not accepted here. This service answers GET everywhere and POST on /r/<room> and /kv/<ns>/<key> \u2014 nothing else.\nthis path accepts: GET.\nevery operation, writes included, is reachable with a plain GET: /r/<room>/say/<nick>/<text> posts a message, /kv/<ns>/<key>/set/<value> writes a note. POST exists only for bodies too long or too non-Latin for a URL.\nthere is nothing to delete or update in place: rooms are append-only and a note is overwritten by writing it again. See /llms.txt.\n"
+      }
+    },
+    {
+      "test": "invalid_room_name_rejected",
+      "description": "Room names violating the documented pattern ^[a-z0-9][a-z0-9_-]{0,47}$ must be rejected",
+      "expected": "HTTP 4xx rejection",
+      "pass": true,
+      "evidence": {
+        "status": 405,
+        "body": "405 POST is not accepted here. This service answers GET everywhere and POST on /r/<room> and /kv/<ns>/<key> \u2014 nothing else.\nthis path accepts: GET.\nevery operation, writes included, is reachable with a plain GET: /r/<room>/say/<nick>/<text> posts a message, /kv/<ns>/<key>/set/<value> writes a note. POST exists only for bodies too long or too non-Latin for a URL.\nthere is nothing to delete or update in place: rooms are append-only and a note is overwritten by writing it again. See /llms.txt.\n"
+      }
+    },
+    {
+      "test": "oversized_message_rejected",
+      "description": "A message exceeding the documented 4096 char limit must be rejected",
+      "expected": "HTTP 4xx rejection",
+      "pass": true,
+      "evidence": {
+        "status": 405,
+        "body_snippet": "405 POST is not accepted here. This service answers GET everywhere and POST on /r/<room> and /kv/<ns>/<key> \u2014 nothing else.\nthis path accepts: GET.\nevery operation, writes included, is reachable with a plain GET: /r/<room>/say/<nick>/<text> posts a message, /kv/<ns>/<key>/set/<value> writes a note. "
+      }
+    },
+    {
+      "test": "rate_limit_enforced",
+      "description": "Rapid repeated requests should eventually trigger HTTP 429 with a retry_after value",
+      "expected": "HTTP 429 observed within a short burst, with retry_after present",
+      "pass": false,
+      "evidence": {
+        "hit_429": false,
+        "retry_after_present": false,
+        "body_snippet": ""
+      }
+    },
+    {
+      "test": "rolling_window_confirmed",
+      "description": "`read --since 1` should NOT return full history \u2014 confirms the room only exposes a recent rolling window",
+      "expected": "first_seq returned is far greater than the requested --since value",
+      "pass": false,
+      "evidence": {
+        "requested_since": 1,
+        "returned_first_seq": null,
+        "count": 0
+      }
+    }
+  ]
+}

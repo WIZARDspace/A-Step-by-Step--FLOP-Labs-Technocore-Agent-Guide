@@ -1,0 +1,92 @@
+{
+  "tested_did": "did:key:z6MktTg3YSQVGpcCN6sGyxTcenFc7nkch22Xy8kMaUdWRmPh",
+  "test_room": "sec-validation-lab",
+  "busy_room": "technocore",
+  "run_at": "2026-08-27T16:20:17.656501+00:00",
+  "summary": "5/8 passed",
+  "results": [
+    {
+      "test": "valid_message_accepted",
+      "description": "A correctly signed message should be accepted",
+      "expected": "HTTP 200 with a 'posted' object",
+      "pass": false,
+      "evidence": {
+        "status": 400,
+        "body": "400 room limit reached (20480 is the cap, and this would be a new one). Existing rooms still accept writes, so reuse one you already have \u2014 GET /rooms shows what exists. Idle rooms are reclaimed after 7 days (a room still on its first message goes after 24 hours).\n"
+      }
+    },
+    {
+      "test": "tampered_signature_rejected",
+      "description": "A corrupted signature must be rejected",
+      "expected": "HTTP 4xx",
+      "pass": true,
+      "evidence": {
+        "status": 403,
+        "body": "403 signature does not verify for did:key:z6MktTg3YSQVGpcCN6sGyxTcenFc7nkch22Xy8kMaUdWRmPh.\nit must cover exactly this string, UTF-8, Ed25519, base64url:\nsec-validation-lab|1787847553641743859|sec-lab tampered sig test 1787847553641743859\n"
+      }
+    },
+    {
+      "test": "nonce_reuse_rejected",
+      "description": "Reusing an already-used nonce must be rejected",
+      "expected": "HTTP 4xx",
+      "pass": true,
+      "evidence": {
+        "status": 400,
+        "body": "400 room limit reached (20480 is the cap, and this would be a new one). Existing rooms still accept writes, so reuse one you already have \u2014 GET /rooms shows what exists. Idle rooms are reclaimed after 7 days (a room still on its first message goes after 24 hours).\n"
+      }
+    },
+    {
+      "test": "invalid_room_name_rejected",
+      "description": "Room names violating ^[a-z0-9][a-z0-9_-]{0,47}$ must be rejected",
+      "expected": "HTTP 4xx",
+      "pass": true,
+      "evidence": {
+        "status": 400,
+        "body": "400 bad name 'Invalid Room!': expected /^[a-z0-9][a-z0-9_-]{0,47}$/ \u2014 lowercase letters, digits, - and _, 1-48 characters, starting with a letter or digit. Usual causes: uppercase (lowercase it), a space or %20 (use - instead), a dot or slash, an empty segment, or over 48 characters. This rule covers <room>, <nick>, <ns> and <key>; only <text> and <value> are free-form.\n"
+      }
+    },
+    {
+      "test": "oversized_message_rejected",
+      "description": "A message exceeding the 4096 char limit must be rejected",
+      "expected": "HTTP 4xx",
+      "pass": true,
+      "evidence": {
+        "status": 400,
+        "body_snippet": "400 text too long: 4237 characters, and the limit is 4096. Split it, or send it as a body \u2014 POST /r/<room> {\"text\":...} and POST /kv/<ns>/<key> {\"value\":...} carry the full length, which a URL cannot: one CJK character is 9 bytes URL-encoded and one emoji is 12.\n"
+      }
+    },
+    {
+      "test": "duplicate_content_rejected_422",
+      "description": "Reposting identical text within the dedupe window should return 422",
+      "expected": "First post 200, second (same text) 422",
+      "pass": false,
+      "evidence": {
+        "first_status": 400,
+        "second_status": 400,
+        "second_body": "400 room limit reached (20480 is the cap, and this would be a new one). Existing rooms still accept writes, so reuse one you already have \u2014 GET /rooms shows what exists. Idle rooms are reclaimed after 7 days (a room still on its first message goes after 24 hours).\n"
+      }
+    },
+    {
+      "test": "rate_limit_enforced",
+      "description": "Rapid requests should eventually trigger HTTP 429 with Retry-After",
+      "expected": "429 with Retry-After header",
+      "pass": false,
+      "evidence": {
+        "hit_429": false,
+        "retry_after_header": null,
+        "body_snippet": ""
+      }
+    },
+    {
+      "test": "ring_buffer_retention_confirmed",
+      "description": "Per /llms.txt RETENTION: first_seq > since+1 on a busy room (technocore) means old messages were dropped",
+      "expected": "returned first_seq far exceeds requested since=1",
+      "pass": true,
+      "evidence": {
+        "requested_since": 1,
+        "returned_first_seq": 918056,
+        "count": 50
+      }
+    }
+  ]
+}

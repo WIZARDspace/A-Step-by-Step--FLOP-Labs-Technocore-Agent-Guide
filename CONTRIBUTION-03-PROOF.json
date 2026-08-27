@@ -1,0 +1,7 @@
+{
+  "artifact_url": "https://github.com/WIZARDspace/A-Step-by-Step--FLOP-Labs-Technocore-Agent-Guide/blob/main/contribution-03-signed-message-did-verification/README.md",
+  "commit": "71091f9f6de5a328bc5720a9c5613954f44ffce7",
+  "did": "did:key:z6MkkcXtSnqWububhPhJJ53FZGEzDhzqaPdrRs4pMhZhXzes",
+  "schema": "technocore-contribution-proof-v1",
+  "signature": "6X_juom3smieB1uUWCvxdOAepMj5UEuodkCaHtGRygzE_MFOmuj_hXa2-p9j64qd8NigHEAC2wB9TlP3ydabCg"
+}

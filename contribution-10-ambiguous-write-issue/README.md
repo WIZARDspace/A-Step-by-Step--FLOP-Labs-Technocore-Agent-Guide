@@ -24,7 +24,7 @@ Before filing, searched the existing issue tracker across several phrasings (`"2
 
 ## A process note
 
-This project attempted several other issues before this one — #378, #436, #368, and #438 — and found each had already been claimed by another contributor (visible via GitHub's "Development" sidebar showing a linked branch or PR) within hours, sometimes minutes, of being filed. That experience is what motivated filing an *original* finding instead of continuing to search for an unclaimed existing issue: contributing something genuinely new sidesteps the duplication problem entirely.
+This project attempted several other issues before this one. #436, #368, and #438 were each already claimed by another contributor (visible via GitHub's "Development" sidebar showing a linked branch or PR) within hours, sometimes minutes, of being filed. #378 had a prior open PR when found, but a fix and regression test were written and submitted anyway (PR #435) rather than treating it as claimed. That experience with duplication is what motivated filing an *original* finding for this one instead of continuing to search for an unclaimed existing issue: contributing something genuinely new sidesteps the problem entirely.
 
 ---
 
